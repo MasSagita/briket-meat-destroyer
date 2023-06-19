@@ -124,7 +124,7 @@ void standby() {
   while (1) {
     refresh_screen(5);
     if (button(2)) set_num += 1, beep_buz(1, 50);
-    if (set_num > 4) set_num = 0;
+    if (set_num > 5) set_num = 0;
 
     if (set_num == 0) {
       //change speed motor
@@ -187,18 +187,46 @@ void standby() {
       if (button(0)) con_speed += 1, beep_buz(1, 25);
       if (button(1)) con_speed -= 1, beep_buz(1, 25);
       //pwm motor limitation
-      con_speed = limitValue(con_speed, 50, 250);
+      con_speed = limitValue(con_speed, 10, 250);
 
       if (btn_test(0)) {
-        run_motor(con, con_speed, 1), grinder_on;
+        delay(200);
+        int arah_conveyor = 3;
+        while(1) {          
+          if (++arah_conveyor > 15) {
+            lcd.clear();
+            arah_conveyor = 3;
+            delay(50);
+          }
+          lcd.setCursor(arah_conveyor, 0), lcd.write(0);
+          lcd.setCursor(0, 0), lcd.print(F("CON"));
+          lcd.setCursor(0, 1), lcd.print(F("GRINDER: ON"));
+          run_motor(con, con_speed, 1), grinder_on;
+          if (btn_test(1)) {
+            delay(200);
+            run_motor(con, 0, 1), grinder_off;
+            break;
+          }
+        }
       }
       else run_motor(con, 0, 1), grinder_off;
       lcd.setCursor(0, 1), lcd.write(0);
-      lcd.setCursor(1, 0), lcd.print(F("Spd Con ")), lcd.print(btn_test(0));
+      lcd.setCursor(1, 0), lcd.print(F("Spd Con "));
       lcd.setCursor(1, 1), lcd.print(con_speed), lcd.print(F("pwm"));
     }
-
+    
     if (set_num == 4) {
+      if (btn_test(0)) dummy_grinder = true, beep_buz(1, 100);
+      if (btn_test(1)) dummy_grinder = false, beep_buz(1, 100);
+      
+      lcd.setCursor(0, 1), lcd.write(0);
+      lcd.setCursor(1, 0), lcd.print(F("Motor Grinder "));
+      lcd.setCursor(1, 1);
+      if (dummy_grinder) lcd.print(F("ON")), grinder_on;
+      if (!dummy_grinder) lcd.print(F("OFF")), grinder_off;
+    }
+
+    if (set_num == 5) {
       lcd.setCursor(1, 0), lcd.print(F("Save?"));
       lcd.setCursor(0, button(0)), lcd.write(0);
       if (button(0)) save();
