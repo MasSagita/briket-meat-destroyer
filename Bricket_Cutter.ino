@@ -1,7 +1,9 @@
 #include <EEPROM.h>
 
+// masukkan input dan output
 #include "input_output.h"
 
+//software reset
 void (* resetFunc) (void) = 0;
 
 int last_counter_cut;
@@ -18,6 +20,7 @@ int set_delay;
 
 void setup() {
   // put your setup code here, to run once:
+  // read from eeprom
   cut_speed = EEPROM.read(0);
   con_speed = EEPROM.read(1);
   set_delay = EEPROM.read(2);
@@ -48,6 +51,7 @@ void loop() {
   last_counter_cut = total_cut;
 }
 
+// move cutting motor to top
 void repost_motor_cutter() {
   while (!ls_atas()) {
     run_motor(cut, -cut_speed, 1);
@@ -97,7 +101,8 @@ void run_cutter() {
   while (1) {
     counter_cut(ls_bawah());
     lcd.setCursor(0, 0), lcd.print(F("    Cutting"));
-    if (ls_bawah()) run_motor(cut, -cut_speed, 1);
+    // speed up = speed down / 2
+    if (ls_bawah()) run_motor(cut, (-cut_speed / 2), 1);
     if (ls_atas()) {
       lcd.clear();
       lcd.setCursor(0, 0), lcd.print(F("  Done Cutting"));
@@ -123,18 +128,20 @@ void standby() {
   set_num = 0;
   while (1) {
     refresh_screen(5);
+    
     if (button(2)) set_num += 1, beep_buz(1, 50);
     if (set_num > 5) set_num = 0;
 
+    // set delay for motor cutting
     if (set_num == 0) {
-      //change speed motor
       if (button(0)) set_delay += 1, beep_buz(1, 25);
       if (button(1)) set_delay -= 1, beep_buz(1, 25);
-
+      
+      // limit delay from 0 to 7s
       set_delay = limitValue(set_delay, 0, 70);
-
       cut_delay = set_delay * 100;
 
+      // test cutting
       if (btn_test(0)) {
         lcd.clear();
         beep_buz(2, 100);
@@ -153,6 +160,7 @@ void standby() {
       lcd.setCursor(1, 1), lcd.print(cut_delay), lcd.print(F("ms"));
     }
 
+    // start when done
     if (set_num == 1) {
       lcd.setCursor(1, 0), lcd.print(F("Done?"));      
       lcd.setCursor(9, 0), lcd.print(F("TC:")), lcd.print(last_counter_cut);
@@ -171,9 +179,10 @@ void standby() {
       //change speed motor
       if (button(0)) cut_speed += 1, beep_buz(1, 25);
       if (button(1)) cut_speed -= 1, beep_buz(1, 25);
-      //pwm motor limitation
-      cut_speed = limitValue(cut_speed, 60, 250);
+      //pwm motor limitation 120 to 250
+      cut_speed = limitValue(cut_speed, 120, 250);
 
+      //run cutter one time
       if (btn_test(0)) {
         run_cutter();
       }
@@ -183,7 +192,7 @@ void standby() {
     }
 
     if (set_num == 3) {
-      //change speed motor
+      //change speed motor conveyor
       if (button(0)) con_speed += 1, beep_buz(1, 25);
       if (button(1)) con_speed -= 1, beep_buz(1, 25);
       //pwm motor limitation
@@ -196,7 +205,7 @@ void standby() {
           if (++arah_conveyor > 15) {
             lcd.clear();
             arah_conveyor = 3;
-            delay(50);
+            delay(100);
           }
           lcd.setCursor(arah_conveyor, 0), lcd.write(0);
           lcd.setCursor(0, 0), lcd.print(F("CON"));
@@ -214,7 +223,8 @@ void standby() {
       lcd.setCursor(1, 0), lcd.print(F("Spd Con "));
       lcd.setCursor(1, 1), lcd.print(con_speed), lcd.print(F("pwm"));
     }
-    
+
+    // test motor grinder
     if (set_num == 4) {
       if (btn_test(0)) dummy_grinder = true, beep_buz(1, 100);
       if (btn_test(1)) dummy_grinder = false, beep_buz(1, 100);
@@ -226,6 +236,7 @@ void standby() {
       if (!dummy_grinder) lcd.print(F("OFF")), grinder_off;
     }
 
+    // save to eeprom
     if (set_num == 5) {
       lcd.setCursor(1, 0), lcd.print(F("Save?"));
       lcd.setCursor(0, button(0)), lcd.write(0);
@@ -236,7 +247,7 @@ void standby() {
   }
 }
 
-// Save and auto reset software
+// Save and auto reset software function
 void save() {
   beep_buz(2, 400);
   delay(500), lcd.clear();
