@@ -16,6 +16,7 @@ byte customChar[] = {
 //button pin up down and select
 int btn_pin[3] = {2, 3, 4};
 
+//limit switch top and buttom
 int ls_pin[2] = {A0, A1};
 
 const int led_pin = 13;
@@ -32,6 +33,7 @@ int btn_test_pin[2] = {A2, A3};
 //relay grinder
 const int grinder = 5;
 
+// relay grinder condition
 #define grinder_off digitalWrite(grinder, LOW);
 #define grinder_on digitalWrite(grinder, HIGH);
 
@@ -100,14 +102,17 @@ bool button(int ch) {
   return !digitalRead(btn_pin[ch]); 
 }
 
+//test button
 bool btn_test(int ch) {
   return !digitalRead(btn_test_pin[ch]);
 }
 
+//top limit switch
 bool ls_atas() {
   return !digitalRead(ls_pin[0]);
 }
 
+//buttom limit switch
 bool ls_bawah() {
   return !digitalRead(ls_pin[1]);
 }
